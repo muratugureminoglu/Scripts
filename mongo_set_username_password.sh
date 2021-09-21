@@ -11,4 +11,4 @@ for (( i=0; i<`mongo --eval 'db.User.find()' serverdb --host 127.0.0.1  | grep "
         mongo --eval 'db.User.deleteOne({ "email": "JamesBond" })' serverdb --host 127.0.0.1
 done
 
-mongo --eval 'db.User.insert ( {"email":"'$USERNAME'","password":"'$PASSWORD'","userType":"ADMIN"} )' serverdb --host 127.0.0.1
+mongo --eval 'db.User.insert ( {"email":"'$USERNAME'","password":"'`echo -n $PASSWORD | md5sum|  cut -d' ' -f1`'","userType":"ADMIN"} )' serverdb --host 127.0.0.1
