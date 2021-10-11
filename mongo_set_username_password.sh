@@ -1,4 +1,5 @@
 #!/bin/bash
+# This script sets username and password in Cloudformation template
 
 USERNAME="$1"
 PASSWORD="$2"
