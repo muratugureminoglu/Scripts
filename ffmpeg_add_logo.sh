@@ -4,7 +4,7 @@
 # https://www.ffmpeg.org/ffmpeg-filters.html
 #
 
-file_destination="/home/murat/beehob/add_logo"
+file_destination="/mnt/videos/"
 extension="*.mp4"
 logo="logo.png"
 top_left="overlay=x=(main_w-overlay_w)/(main_w-overlay_w):y=(main_h-overlay_h)/(main_h-overlay_h)"
