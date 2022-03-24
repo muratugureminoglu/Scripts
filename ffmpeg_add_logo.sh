@@ -16,8 +16,8 @@ for file in `find $file_destination -iname "$extension"`; do
 		break
 	else
 		new_file=$(basename $file .mp4)"_original.mp4"
-		cp $file $new_file
-		ffmpeg -y -i $new_file -i $logo -filter_complex $top_left $file
+		cp $file $file_destination$new_file
+		ffmpeg -y -i $file_destination$new_file -i $logo -filter_complex $top_left $file
 	fi
 done
 
