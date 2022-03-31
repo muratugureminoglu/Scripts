@@ -4,7 +4,9 @@
 # https://www.ffmpeg.org/ffmpeg-filters.html
 #
 
-file_destination="/mnt/videos/"
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+file_destination="/root/videos/"
 extension=".mp4"
 logo="$(pwd)/logo.png"
 top_left="overlay=x=(main_w-overlay_w)/(main_w-overlay_w):y=(main_h-overlay_h)/(main_h-overlay_h)"
@@ -20,3 +22,4 @@ for file in `find $file_destination -iname "*$extension"`; do
 		ffmpeg -y -i $file_destination$new_file -i $logo -filter_complex $top_left $file
 	fi
 done
+IFS=$SAVEIFS
