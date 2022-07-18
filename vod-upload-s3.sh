@@ -27,12 +27,13 @@ AWS_ACCESS_KEY=""
 AWS_SECRET_KEY=""
 AWS_REGION=""
 AWS_BUCKET_NAME=""
+$AWS="/usr/local/bin/aws"
 
 #AWS Configuration
-aws configure set aws_access_key_id $AWS_ACCESS_KEY
-aws configure set aws_secret_access_key $AWS_SECRET_KEY
-aws configure set region $AWS_REGION
-aws configure set output json
+$AWS configure set aws_access_key_id $AWS_ACCESS_KEY
+$AWS configure set aws_secret_access_key $AWS_SECRET_KEY
+$AWS configure set region $AWS_REGION
+$AWS configure set output json
 
 
 tmpfile=$1
@@ -40,14 +41,14 @@ mv $tmpfile ${tmpfile%.*}.mp4"_tmp"
 ffmpeg -i ${tmpfile%.*}.mp4"_tmp" -c copy -map 0 -movflags +faststart $tmpfile
 rm ${tmpfile%.*}.mp4"_tmp"
 
-aws s3 cp $tmpfile s3://$AWS_BUCKET_NAME/streams/ --acl public-read
+$AWS s3 cp $tmpfile s3://$AWS_BUCKET_NAME/streams/ --acl public-read
 
 if [ $? != 0 ]; then
         logger "$tmpfile failed to copy file to S3. "
 else
         # Delete the uploaded file
         if [ "$DELETE_LOCAL_FILE" == "Y" ]; then
-                aws s3api head-object --bucket $AWS_BUCKET_NAME --key streams/$(basename $tmpfile)
+                $AWS s3api head-object --bucket $AWS_BUCKET_NAME --key streams/$(basename $tmpfile)
                 if [ $? == 0 ];then
                         rm -rf $tmpfile
                         logger "$tmpfile is deleted."
