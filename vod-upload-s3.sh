@@ -41,6 +41,7 @@ mv $tmpfile ${tmpfile%.*}.mp4"_tmp"
 ffmpeg -i ${tmpfile%.*}.mp4"_tmp" -c copy -map 0 -movflags +faststart $tmpfile
 rm ${tmpfile%.*}.mp4"_tmp"
 
+#Copy with public permission
 $AWS s3 cp $tmpfile s3://$AWS_BUCKET_NAME/streams/ --acl public-read
 
 if [ $? != 0 ]; then
