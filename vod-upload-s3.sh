@@ -35,7 +35,6 @@ $AWS configure set aws_secret_access_key $AWS_SECRET_KEY
 $AWS configure set region $AWS_REGION
 $AWS configure set output json
 
-
 tmpfile=$1
 mv $tmpfile ${tmpfile%.*}.mp4"_tmp"
 ffmpeg -i ${tmpfile%.*}.mp4"_tmp" -c copy -map 0 -movflags +faststart $tmpfile
