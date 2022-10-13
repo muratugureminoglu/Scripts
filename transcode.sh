@@ -14,9 +14,12 @@ transcode_folder="/root/scripts/transcode_process/"
 distribution_id="000000000"
 
 # Bitrates
-a=("1920x1080" "2500k")
-b=("1280x720" "1500k")
-c=("640x480" "750k")
+# a = 1080p
+# b = 720p
+# c = 480p
+a=("1920x1080" "2500k") 
+b=("1280x720" "1500k") 
+c=("640x480" "750k") 
 
 parameter="-iname \"*.mp4\" -o -iname \"*.mov\" -o -iname \"*.avi\" -o -iname \"*.m4a\" -o -iname \"*.mp3\" -o -iname \"*.MOV\" -o -iname \"*.MP4\""
 
