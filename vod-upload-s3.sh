@@ -27,7 +27,7 @@ AWS_ACCESS_KEY=""
 AWS_SECRET_KEY=""
 AWS_REGION=""
 AWS_BUCKET_NAME=""
-$AWS="/usr/local/bin/aws"
+AWS="/usr/local/bin/aws"
 
 #AWS Configuration
 $AWS configure set aws_access_key_id $AWS_ACCESS_KEY
