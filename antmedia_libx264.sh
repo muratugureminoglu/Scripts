@@ -1,5 +1,6 @@
 #!/bin/bash
-# convert libopenh264 to libx264 for all apps
+#
+# Change libopenh264 to libx264 for all apps
 #
 
 v25="https://antmedia.io/libx264/ffmpeg-linux-x86_64-gpl.jar"
