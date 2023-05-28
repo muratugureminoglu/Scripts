@@ -1,5 +1,7 @@
 import boto3, time
-
+#
+# This script terminates the existing instances (expect MongoDB) and recreates them with a new image.
+#
 ec2_client = boto3.client('ec2')
 autoscaling_client = boto3.client('autoscaling')
 
