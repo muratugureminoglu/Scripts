@@ -41,7 +41,8 @@ def check_and_upgrade(count, current_instance_count, asg_name):
     if count > current_instance_count:
         response = autoscaling_client.update_auto_scaling_group(
             AutoScalingGroupName=asg_name,
-            DesiredCapacity=count
+            DesiredCapacity=count,
+            MinSize=count
         )
 
 if edge_instance_type == "c5.xlarge":
