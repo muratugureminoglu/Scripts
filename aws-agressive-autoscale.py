@@ -34,46 +34,58 @@ origin_current_instance_count = len(origin_autoscaling_group['AutoScalingGroups'
 #instance_type='c5.xlarge'
 current_instance_count=int(2)
 
-viewer_count = 500
+viewer_count = 200
 publisher_count = 1
 
-def check_and_upgrade(edge_count, origin_count, current_instance_count):
+def edge_check_and_upgrade(edge_count, current_instance_count):
     if edge_count > current_instance_count:
         edge = autoscaling_client.update_auto_scaling_group(
             AutoScalingGroupName=asg_edge_group_names,
             DesiredCapacity=edge_count
         )
 
+def origin_check_and_upgrade(origin_count, current_instance_count):
     if origin_count > current_instance_count:
         origin = autoscaling_client.update_auto_scaling_group(
             AutoScalingGroupName=asg_origin_group_names,
             DesiredCapacity=origin_count
         )
 
-
-if instance_type == "c5.xlarge":
+if edge_instance_type == "c5.xlarge":
     if viewer_count >= 1 and viewer_count <= C5_XLARGE_EDGE_LIMIT * 10:
         edge_count = -(-viewer_count // C5_XLARGE_EDGE_LIMIT)
         print (edge_count)
+    edge_check_and_upgrade(edge_count, edge_current_instance_count)
+elif origin_instance_type == "c5.xlarge":
     if publisher_count >= 1 and publisher_count <= C5_XLARGE_ORIGIN_LIMIT * 3:
         origin_count = -(-publisher_count // C5_XLARGE_ORIGIN_LIMIT)
         print (origin_count)
-    check_and_upgrade(edge_count, origin_count, current_instance_count)
-elif instance_type == "c5.4xlarge":
+    origin_check_and_upgrade(origin_count, origin_current_instance_count)
+elif edge_instance_type == "c5.4xlarge":
     if viewer_count >= C5_XLARGE_EDGE_LIMIT * 10 + 1 and viewer_count <= C5_4XLARGE_EDGE_LIMIT * 10:
         edge_count = -(-viewer_count // C5_4XLARGE_EDGE_LIMIT)
         print(edge_count)
     if publisher_count >= C5_XLARGE_ORIGIN_LIMIT * 3 + 1 and publisher_count <= C5_4XLARGE_ORIGIN_LIMIT * 3:
         origin_count = -(-publisher_count // C5_4XLARGE_ORIGIN_LIMIT)
         print(origin_count)
-    check_and_upgrade(edge_count, origin_count, current_instance_count)
-elif instance_type == "c5.9xlarge":
+    edge_check_and_upgrade(edge_count, current_instance_count)
+elif origin_instance_type == "c5.4xlarge":
+    if publisher_count >= C5_XLARGE_ORIGIN_LIMIT * 3 + 1 and publisher_count <= C5_4XLARGE_ORIGIN_LIMIT * 3:
+        origin_count = -(-publisher_count // C5_4XLARGE_ORIGIN_LIMIT)
+        print(origin_count)
+    origin_check_and_upgrade(origin_count, current_instance_count)
+elif edge_instance_type == "c5.9xlarge":
     if viewer_count >= C5_4XLARGE_EDGE_LIMIT * 10 + 1:
         edge_count = -(-viewer_count // C5_9XLARGE_EDGE_LIMIT)
         print(edge_count)
     if publisher_count >= C5_4XLARGE_ORIGIN_LIMIT * 3 + 1:
         origin_count = -(-publisher_count // C5_9XLARGE_ORIGIN_LIMIT)
         print(origin_count)
-    check_and_upgrade(edge_count, origin_count, current_instance_count)
+    edge_check_and_upgrade(edge_count, current_instance_count)
+elif origin_instance_type == "c5.9xlarge":
+    if publisher_count >= C5_4XLARGE_ORIGIN_LIMIT * 3 + 1:
+        origin_count = -(-publisher_count // C5_9XLARGE_ORIGIN_LIMIT)
+        print(origin_count)
+    origin_check_and_upgrade(origin_count, current_instance_count)
 else:
     print("exit")
