@@ -75,5 +75,3 @@ if origin_instance_type == "c5.9xlarge":
         origin_count = -(-publisher_count // C5_9XLARGE_ORIGIN_LIMIT)
         print(origin_count)
     check_and_upgrade(origin_count, origin_current_instance_count,asg_origin_group_names)
-else:
-    print("exit")
