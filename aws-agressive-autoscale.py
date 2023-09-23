@@ -46,32 +46,26 @@ def check_and_upgrade(count, current_instance_count, asg_name):
         )
 
 if edge_instance_type == "c5.xlarge":
-    if viewer_count >= 1 and viewer_count <= C5_XLARGE_EDGE_LIMIT * 10:
-        edge_count = -(-viewer_count // C5_XLARGE_EDGE_LIMIT)
-        print (edge_count)
+    edge_count = -(-viewer_count // C5_XLARGE_EDGE_LIMIT)
+    print (edge_count)
     check_and_upgrade(edge_count, edge_current_instance_count,asg_edge_group_names)
 if origin_instance_type == "c5.xlarge":
-    if publisher_count >= 1 and publisher_count <= C5_XLARGE_ORIGIN_LIMIT * 3:
-        origin_count = -(-publisher_count // C5_XLARGE_ORIGIN_LIMIT)
-        print (origin_count)
+    origin_count = -(-publisher_count // C5_XLARGE_ORIGIN_LIMIT)
+    print (origin_count)
     check_and_upgrade(origin_count, origin_current_instance_count,asg_origin_group_names)
 if edge_instance_type == "c5.4xlarge":
-    if viewer_count >= C5_XLARGE_EDGE_LIMIT * 10 + 1 and viewer_count <= C5_4XLARGE_EDGE_LIMIT * 10:
-        edge_count = -(-viewer_count // C5_4XLARGE_EDGE_LIMIT)
-        print(edge_count)
+    edge_count = -(-viewer_count // C5_4XLARGE_EDGE_LIMIT)
+    print(edge_count)
     check_and_upgrade(edge_count, edge_current_instance_count,asg_edge_group_names)
 if origin_instance_type == "c5.4xlarge":
-    if publisher_count >= C5_XLARGE_ORIGIN_LIMIT * 3 + 1 and publisher_count <= C5_4XLARGE_ORIGIN_LIMIT * 3:
-        origin_count = -(-publisher_count // C5_4XLARGE_ORIGIN_LIMIT)
-        print(origin_count)
+    origin_count = -(-publisher_count // C5_4XLARGE_ORIGIN_LIMIT)
+    print(origin_count)
     check_and_upgrade(origin_count, origin_current_instance_count,asg_origin_group_names)
 if edge_instance_type == "c5.9xlarge":
-    if viewer_count >= C5_4XLARGE_EDGE_LIMIT * 10 + 1:
-        edge_count = -(-viewer_count // C5_9XLARGE_EDGE_LIMIT)
-        print(edge_count)
+    edge_count = -(-viewer_count // C5_9XLARGE_EDGE_LIMIT)
+    print(edge_count)
     check_and_upgrade(edge_count, edge_current_instance_count,asg_edge_group_names)
 if origin_instance_type == "c5.9xlarge":
-    if publisher_count >= C5_4XLARGE_ORIGIN_LIMIT * 3 + 1:
-        origin_count = -(-publisher_count // C5_9XLARGE_ORIGIN_LIMIT)
-        print(origin_count)
+    origin_count = -(-publisher_count // C5_9XLARGE_ORIGIN_LIMIT)
+    print(origin_count)
     check_and_upgrade(origin_count, origin_current_instance_count,asg_origin_group_names)
