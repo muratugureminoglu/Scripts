@@ -1,5 +1,6 @@
 import boto3, os
 
+
 def lambda_handler(event, context):
     # Get the viewer_count and publisher_count from api gateway
     viewer_count = event['params']['querystring']['viewer_count']
@@ -14,9 +15,8 @@ def lambda_handler(event, context):
     C5_9XLARGE_ORIGIN_LIMIT = C5_XLARGE_ORIGIN_LIMIT * 9
 
     # Initialize AWS clients (use the environment variables)
-    autoscaling_client = boto3.client('autoscaling', region_name=os.environ['aws_region'])
-    ec2_client = boto3.client('ec2', region_name=os.environ['aws_region'])
-
+    autoscaling_client = boto3.client('autoscaling')
+    ec2_client = boto3.client('ec2')
     # Find Auto Scaling Group names with specific prefixes
     asg_names = autoscaling_client.describe_auto_scaling_groups()
     asg_edge_name = [group for group in asg_names['AutoScalingGroups'] if 'EdgeGroup' in group['AutoScalingGroupName']]
@@ -24,6 +24,9 @@ def lambda_handler(event, context):
                        'OriginGroup' in group['AutoScalingGroupName']]
     asg_edge_group_names = [group['AutoScalingGroupName'] for group in asg_edge_name][0]
     asg_origin_group_names = [group['AutoScalingGroupName'] for group in asg_origin_name][0]
+
+    print(asg_edge_name)
+    print(asg_edge_group_names)
 
     # Describe Auto Scaling Groups
     edge_autoscaling_group = autoscaling_client.describe_auto_scaling_groups(
@@ -63,7 +66,9 @@ def lambda_handler(event, context):
         print(origin_count)
         check_and_upgrade(origin_count, origin_current_instance_count, asg_origin_group_names)
 
+
 def check_and_upgrade(count, current_instance_count, asg_name):
+    autoscaling_client = boto3.client('autoscaling')
     if count > current_instance_count:
         response = autoscaling_client.update_auto_scaling_group(
             AutoScalingGroupName=asg_name,
