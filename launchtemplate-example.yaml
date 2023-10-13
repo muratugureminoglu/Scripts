@@ -1,0 +1,367 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Ant Media Server AutoScaling CloudFormation Templates.
+  If you have any questions, please just drop a line to contact (at) antmedia.io
+Parameters:
+  VpcCidrBlock:
+    Description: 'CIDR value for Wavelength Network'
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 10.0.0.0/16
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  OriginCidrBlock:
+    Description: 'CIDR value of Origin'
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 10.0.1.0/24
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+  EdgeCidrBlock:
+    Description: 'CIDR value of Edge'
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 10.0.2.0/24
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+
+  Email:
+    Description: EMail address to notify if there are any scaling operations
+    Type: String
+    Default: test@antmedia.io
+    AllowedPattern: >-
+      ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
+    ConstraintDescription: must be a valid email address.
+  DashboardPassword:
+    Description: 'Web Panel Password'
+    Type: String
+    Default: ''
+  AntMediaOriginCapacity:
+    Default: '1'
+    Description: The initial number of Ant Media Origin instances
+    Type: Number
+    MinValue: '1'
+    MaxValue: '1000'
+  AntMediaOriginCapacityMax:
+    Default: '10'
+    Description: The initial number of Ant Media Origin instances
+    Type: Number
+    ConstraintDescription: must be between 2 and 20 EC2 instances.
+  AntMediaEdgeCapacity:
+    Default: '1'
+    Description: The initial number of Ant Media Edge instances
+    Type: Number
+    MinValue: '1'
+    MaxValue: '1000'
+  AntMediaEdgeCapacityMax:
+    Default: '10'
+    Description: The initial number of Ant Media Edge instances
+    Type: Number
+    ConstraintDescription: must be between 2 and 20 EC2 instances.
+  CPUPolicyTargetValue:
+    Type: Number
+    Default: 60.0
+    Description: This parameter for creates new Instances when CPU load exceed to %60.
+  LoadBalancerCertificateArn:
+    Description: 'Amazon Resource Name (ARN) of the certificate to associate with the load balancer. If you do not have the SSL certificate, please check this guide: https://antmedia.io/ant-media-server-cloudformation-installation/ '
+    Type: String
+    Default: ''
+  DiskSize:
+    Default: '10'
+    Description: Disk size of instances
+    Type: Number
+    MinValue: '10'
+    MaxValue: '1000'
+
+Resources:
+  DescribeImagesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DescribeImages
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action: ec2:DescribeImages
+                Effect: Allow
+                Resource: "*"
+  AMSGetLatestAMI:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.8
+      Handler: index.handler
+      Role: !Sub ${DescribeImagesRole.Arn}
+      Timeout: 60
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import json
+          import traceback
+
+          def handler(event, context):
+            try:
+              response = boto3.client('ec2').describe_images(
+                  Filters=[
+                    {'Name': 'product-code', 'Values': [event['ResourceProperties']['ProductId']]},
+                    {'Name': 'name', 'Values': [event['ResourceProperties']['Name']]},
+                    {'Name': 'architecture', 'Values': [event['ResourceProperties']['Architecture']]},
+                    {'Name': 'root-device-type', 'Values': ['ebs']},
+                  ],
+              )
+
+              amis = sorted(response['Images'],
+                            key=lambda x: x['CreationDate'],
+                            reverse=True)
+              id = amis[0]['ImageId']
+
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, id)
+            except:
+              traceback.print_last()
+              cfnresponse.send(event, context, cfnresponse.FAIL, {}, "ok")
+
+
+  AntMediaAmi:
+    Type: Custom::FindAMI
+    Properties:
+      ServiceToken: !Sub ${AMSGetLatestAMI.Arn}
+      ProductId: "4wh7rhpic3wfwamyp5905tsbt"
+      Name: "AntMedia-AWS-Marketplace-EE-*"
+      Architecture: "x86_64"
+
+  AntMediaVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-AntMedia-VPC
+
+  OriginZone:
+    Type: AWS::EC2::Subnet
+    DependsOn: AntMediaVPC
+    Properties:
+      VpcId: !Ref AntMediaVPC
+      CidrBlock: !Ref OriginCidrBlock
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: 
+        Fn::Select: 
+          - 0
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-AntMedia-Origin-Subnet
+
+  EdgeZone:
+    Type: AWS::EC2::Subnet
+    DependsOn: AntMediaVPC
+    Properties:
+      VpcId: !Ref AntMediaVPC
+      CidrBlock: !Ref EdgeCidrBlock
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: 
+        Fn::Select: 
+          - 1
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-AntMedia-Edge-Subnet
+
+  DefaultGateway:
+    Type: AWS::EC2::InternetGateway
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref DefaultGateway
+      VpcId: !Ref AntMediaVPC
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AntMediaVPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-AntMedia-Route-Table
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      GatewayId: !Ref DefaultGateway
+      DestinationCidrBlock: 0.0.0.0/0
+
+  SubnetRouteTableAssociationOrigin:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref OriginZone
+
+  SubnetRouteTableAssociationEdge:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref EdgeZone
+
+
+  NotificationTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
+
+
+  EdgeGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn:
+      - LaunchTemplateEdge
+    Properties:
+      VPCZoneIdentifier: 
+        - !Ref EdgeZone
+      LaunchTemplate:
+        LaunchTemplateName: !Sub LaunchTemplateEdge
+        Version: !GetAtt 'LaunchTemplateEdge.LatestVersionNumber'
+      MinSize: !Ref AntMediaEdgeCapacity
+      MaxSize: !Ref AntMediaEdgeCapacityMax
+      DesiredCapacity: !Ref AntMediaEdgeCapacity
+
+      Tags:
+        - Key: Name
+          Value: Antmedia-Edge
+          PropagateAtLaunch: 'true'
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+        Count: !Ref AntMediaEdgeCapacity
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: '1'
+        MaxBatchSize: '1'
+        PauseTime: PT15M
+        WaitOnResourceSignals: 'true'
+      NotificationConfiguration:
+          TopicARN: !Ref NotificationTopic
+          NotificationTypes:
+            - 'autoscaling:EC2_INSTANCE_LAUNCH'
+            - 'autoscaling:EC2_INSTANCE_LAUNCH_ERROR'
+            - 'autoscaling:EC2_INSTANCE_TERMINATE'
+            - 'autoscaling:EC2_INSTANCE_TERMINATE_ERROR'
+
+  LaunchTemplateEdge:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Properties:
+      LaunchTemplateName: LaunchTemplateEdge
+      LaunchTemplateData:
+        InstanceType: t2.large
+        KeyName: murat
+        ImageId: !Ref AntMediaAmi
+        SecurityGroupIds:
+          - !GetAtt "InstanceSecurityGroup.GroupId"
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeSize: !Ref DiskSize
+              VolumeType: gp2
+              DeleteOnTermination: true
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            touch /usr/local/antmedia/conf/initialized
+            apt-get update 
+            apt-get install -y python3-pip
+            apt-get install -y python3-setuptools
+            mkdir -p /opt/aws/bin
+            wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+            python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchTemplateEdge --configsets setup --region ${AWS::Region}
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EdgeGroup --region ${AWS::Region}
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: EdgeInstance
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: Name
+              Value: LaunchTemplateEdge
+
+
+  ELBSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Allows access
+        VpcId: !Ref AntMediaVPC
+        SecurityGroupIngress:
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            Description: Allow 80. Port for Origin Instances 
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            Description: Allow 443. Port for Origin Instances
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: tcp
+            FromPort: 5080
+            ToPort: 5080
+            Description: Allow 5080. Port for Edge Instances
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: tcp
+            FromPort: 5443
+            ToPort: 5443
+            Description: Allow 5443. Port for Edge Instances
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable SSH access and HTTP access on the configured port
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '5080'
+          ToPort: '5080'
+          CidrIp: !Ref VpcCidrBlock
+        - IpProtocol: tcp
+          FromPort: '1935'
+          ToPort: '1935'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: '50000'
+          ToPort: '60000'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '5000'
+          ToPort: '5000'
+          CidrIp: !Ref VpcCidrBlock
+      VpcId: !Ref AntMediaVPC
+
+  EdgeCPUPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref EdgeGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: !Ref CPUPolicyTargetValue
+
+
