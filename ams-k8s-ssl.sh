@@ -4,6 +4,7 @@
 # If you use different namespace or deployment/ingress etc. names, you must make the changes manually.
 #
 
+
 namespace="antmedia"
 ingress_controller_name="antmedia-ingress-nginx-controller"
 get_ingress=`kubectl get -n $namespace svc $ingress_controller_name -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
