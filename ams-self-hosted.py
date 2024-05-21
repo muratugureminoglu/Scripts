@@ -1,6 +1,7 @@
 import boto3, time, json, os
 
 def lambda_handler(event, context):
+    
     listener_arn = os.environ['LISTENER_ARN']
     origin_asg = os.environ['ORIGIN_ASG']
     target_group_arn = os.environ['TARGETGROUP_ARN']
