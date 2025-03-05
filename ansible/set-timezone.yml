@@ -1,0 +1,23 @@
+---
+- name: Set Timezone to Europe/Istanbul
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install tzdata package (Debian/Ubuntu)
+      apt:
+        name: tzdata
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Set timezone to Europe/Istanbul
+      timezone:
+        name: Europe/Istanbul
+
+    - name: Verify the timezone
+      command: date
+      register: current_time
+      changed_when: false
+
+    - name: Show current timezone
+      debug:
+        msg: "{{ current_time.stdout }}"
