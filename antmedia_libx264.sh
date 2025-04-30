@@ -3,8 +3,8 @@
 # Change libopenh264 to libx264 for all apps
 #
 
-v25="https://antmedia.io/libx264/ffmpeg-linux-x86_64-gpl.jar"
-v26="https://antmedia.io/libx264/ffmpeg-5.1.2-1.5.8-linux-x86_64-gpl.jar"
+v25="ffmpeg-linux-x86_64-gpl.jar"
+v26="ffmpeg-5.1.2-1.5.8-linux-x86_64-gpl.jar"
 PLUGIN_DIR="/usr/local/antmedia/plugins"
 AMS_BASE="/usr/local/antmedia/"
 
