@@ -1,5 +1,7 @@
 #!/bin/bash
 
+APPS="live"
+
 jwt_token() {
 
     header='{"alg":"HS256","typ":"JWT"}'
@@ -18,3 +20,4 @@ jwt_token() {
 }
 
 JWT_TOKEN=$(jwt_token)
+echo $JWT_TOKEN
