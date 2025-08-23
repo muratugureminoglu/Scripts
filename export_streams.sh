@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Usage:
-#   ./get_streams.sh <app_name>             -> export all streams
-#   ./get_streams.sh <app_name> <stream_id> -> export only given stream
+#   ./export_streams.sh <app_name>             -> export all streams
+#   ./export_streams.sh <app_name> <stream_id> -> export only given stream
 
 APP_NAME=$1
 STREAM_ID=$2
