@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Usage:
+#   ./generate_tokens.sh <APP_NAME> <STREAM_ID> <MINUTES> <COUNT>
+# Example:
+#   ./generate_tokens.sh live stream1 10 10000
+
 APP_NAME=$1
 STREAM_ID=$2
 MINUTES=$3
