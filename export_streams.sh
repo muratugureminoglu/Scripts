@@ -1,5 +1,7 @@
 #!/bin/bash
-
+#
+# Export Ant Media Server streams (all or specific stream).
+#
 # Usage:
 #   ./export_streams.sh <app_name>             -> export all streams
 #   ./export_streams.sh <app_name> <stream_id> -> export only given stream
