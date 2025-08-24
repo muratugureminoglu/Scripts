@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Export Ant Media Server streams (all or specific stream) as JSON.
+# Import Ant Media Server streams (all or specific stream).
 #
 # Usage:
 #   ./import_streams.sh <app_name> <file_name>
