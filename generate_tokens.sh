@@ -1,5 +1,7 @@
 #!/bin/bash
-
+#
+# Import Ant Media Server streams (all or specific stream).
+#
 # Usage:
 #   ./generate_tokens.sh <APP_NAME> <STREAM_ID> <MINUTES> <COUNT>
 # Example:
