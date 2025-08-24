@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Import Ant Media Server streams (all or specific stream).
+# Import Ant Media Server streams.
 #
 # Usage:
 #   ./import_streams.sh <app_name> <file_name>
