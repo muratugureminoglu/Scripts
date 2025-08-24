@@ -17,8 +17,9 @@ if [ -z "$APP_NAME" ]; then
 fi
 
 jwt_token() {
+    iat=$(date +%s)
     header='{"alg":"HS256","typ":"JWT"}'
-    payload='{"iat": 1516239022}'
+    payload="{\"iat\":$iat}"
 
     header_base64=$(echo -n "$header" | openssl base64 -e | tr -d '=' | tr '/+' '_-' | tr -d '\n')
     payload_base64=$(echo -n "$payload" | openssl base64 -e | tr -d '=' | tr '/+' '_-' | tr -d '\n')
