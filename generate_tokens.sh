@@ -41,4 +41,4 @@ echo "]" >> "$OUTPUT_FILE"
 END_TIME=$(date +%s) 
 DURATION=$((END_TIME - START_TIME))
 echo "$COUNT tokens written to $OUTPUT_FILE (valid for $MINUTES minutes)"
-echo "Completed in $DURATION seconds
+echo "Completed in $DURATION seconds"
