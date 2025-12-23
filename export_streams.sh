@@ -11,6 +11,10 @@ STREAM_ID=$2
 CONFIG_FILE="/usr/local/antmedia/webapps/$APP_NAME/WEB-INF/red5-web.properties"
 BASE_URL="http://localhost:5080"
 
+LIMIT=250
+OFFSET=0
+OUT_FILE="${APP_NAME}_streams.json"
+
 if [ -z "$APP_NAME" ]; then
   echo "Usage:"
   echo "  $0 <app_name>             -> export all streams"
@@ -44,12 +48,38 @@ else
     CURL_CMD=(curl -s -H "accept: application/json")
 fi
 
+# -------------------------
+# EXPORT ALL STREAMS
+# -------------------------
 if [ -z "$STREAM_ID" ]; then
-  "${CURL_CMD[@]}" "$BASE_URL/$APP_NAME/rest/v2/broadcasts/list/0/1000" \
-    | jq 'map(del(.anyoneWatching))' > "${APP_NAME}_streams.json"
-  echo "All streams exported to: ${APP_NAME}_streams.json"
+
+  echo "[]" > "$OUT_FILE"
+
+  while true; do
+    RESPONSE=$("${CURL_CMD[@]}" \
+      "$BASE_URL/$APP_NAME/rest/v2/broadcasts/list/$OFFSET/$LIMIT")
+
+    COUNT=$(echo "$RESPONSE" | jq 'length')
+
+    [ "$COUNT" -eq 0 ] && break
+
+    jq -s '.[0] + (.[1] | map(del(.anyoneWatching)))' \
+      "$OUT_FILE" <(echo "$RESPONSE") > /tmp/streams.json
+
+    mv /tmp/streams.json "$OUT_FILE"
+
+    OFFSET=$((OFFSET + LIMIT))
+  done
+
+  echo "All streams exported to: $OUT_FILE"
+  echo "Total streams: $(jq 'length' "$OUT_FILE")"
+
+# -------------------------
+# EXPORT SINGLE STREAM
+# -------------------------
 else
   "${CURL_CMD[@]}" "$BASE_URL/$APP_NAME/rest/v2/broadcasts/$STREAM_ID" \
     | jq 'del(.anyoneWatching)' > "${APP_NAME}_${STREAM_ID}.json"
+
   echo "Stream exported to: ${APP_NAME}_${STREAM_ID}.json"
 fi
