@@ -133,6 +133,9 @@ check_result
 sed -i $SED_COMPATIBILITY 's^<param-value>/StreamApp^<param-value>/'$APP_NAME'^' $WEB_XML_FILE
 check_result
 
+echo "stunServerURI=$TURN_URL" >> $RED5_PROPERTIES_FILE 
+
+
 sed -i "/urls.*stun/a\\
                         }, {\\
                                 'urls': '$TURN_URL',\\
